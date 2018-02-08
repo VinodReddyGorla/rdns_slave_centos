@@ -1,0 +1,140 @@
+---
+############## CUSTOM INPUTS FOR DEPENDENCE CHECK ###################
+
+
+ramsize: '970'                   # in Megabyte
+cpuspeed: '2000'                 # In Megahertz
+cores: '1'                       # in numeric
+diskspace: '20'                  # in GB
+
+
+
+############### INPUT IP'S OF RDNS MASTER AND SLAVES ##############
+ips: 1923.168.32.45; 192.168.56.23; 192.168.32.25; 192.168.32.56;
+
+
+master_ip: 192.168.32.171
+slave1_ip: 192.168.32.172
+slave2_ip: 192.168.32.173
+
+
+############### INPUT HOSTNAMES OF RDNS MASTER AND SLAVES ##########
+
+
+
+master_hostname: ns1.dnsmaster.com
+slave1_hostname: ns2.dnsslave1.com
+slave2_hostname: ns3.dnsslave2.com
+
+
+
+##############  ACL clients for allow qu ###############################
+
+
+
+allow_query_clients:
+                  - 192.168.32.0/24;
+
+
+############### DOMINE NAME OF RDNS MASTER #########################
+
+
+master_domine: dnsmaster.com
+
+
+############### USERNAME AND PASSWORD OF SLAVES #####################
+
+
+
+user_name: vinod                       # for all nodes
+password: password                     # for all nodes
+
+
+
+############### REVERS ZONE OF RDNS MASTER ##########################
+
+
+
+zone: 32.168.192.in-addr.arpa          # revers zone
+
+
+
+############### NUMBER FIREWALL Z0NES AND INTERFACES -> MAXIMUM NUMBER = 5 ###
+
+
+
+no_zones_interfaces: "2"
+
+
+
+############### FIREWALL CUSTOM ZONES  #############################
+
+
+
+firewall_zone1: sdtl1                   # zone1 name
+firewall_zone2: sdtl2                   # zone2 name
+firewall_zone3: sdtl3                   # zone3 name
+firewall_zone4: sdtl4                   # zone4 name
+firewall_zone5: sdtl5                   # zone5 name
+
+
+
+##############  INTERFACE FOR FIREWALL ZONES  #######################
+
+
+
+interface1: ens33                       # interface1 name for zone1
+interface2: ens37                       # interface2 name for zone2
+interface3: ens38                       # interface3 name for zone3
+interface4: ens39                       # interface4 name for zone4
+interface5: ens36                       # interface5 name for zone4
+
+
+
+############### FIREWALLD PORTS FOR ZONES  ##########################
+
+
+
+ports_zone1:
+    - "53/tcp"
+    - "53/udp"
+    - "22/tcp"
+    - "14981/tcp"
+
+ports_zone2:
+    - "53/tcp"
+    - "53/udp"
+    - "22/tcp"
+    - "14981/tcp"
+
+ports_zone3:
+    - "53/tcp"
+    - "53/udp"
+    - "22/tcp"
+    - "14981/tcp"
+
+ports_zone4:
+    - "53/tcp"
+    - "53/udp"
+    - "22/tcp"
+    - "14981/tcp"
+
+ports_zone5:
+    - "53/tcp"
+    - "53/udp"
+    - "22/tcp"
+    - "14981/tcp"
+
+
+##############  END OF THE INPUT FILE ##############################
+
+
+
+
+
+ptr_records:
+          -  174       IN      PTR     c1.example1.com. 
+          -  175       IN      PTR     c2.example2.com.
+          -  176       IN      PTR     c3.example3.com.
+
+

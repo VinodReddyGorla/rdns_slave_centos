@@ -1,0 +1,33 @@
+---
+ - name: Creating zone1 for firewalld...
+   command: firewall-cmd --permanent --new-zone={{ firewall_zone1 }}
+ - name: reloading firewall
+   command: firewall-cmd --reload
+ - name: Changing intarface...
+   command: firewall-cmd --permanent --zone={{ firewall_zone1 }} --change-interface={{ interface1 }}
+ - name: Adding ports to firewalld for zone1...
+   firewalld:
+           zone: '{{ firewall_zone1 }}'
+           port: "{{ item }}"
+           permanent: true
+           state: enabled
+   with_items: "{{ ports_zone1 }}"
+ - name: reloading firewall
+   command: firewall-cmd --reload
+ - name: Creating  zone2 for firewalld ...
+   command: firewall-cmd --permanent --new-zone={{ firewall_zone2 }}
+ - name: reloading firewall
+   command: firewall-cmd --reload
+ - name: Changing intarface...
+   command: firewall-cmd --permanent --zone={{ firewall_zone2 }} --change-interface={{ interface2 }}
+ - name: Adding ports to firewalld for zone2...
+   firewalld:
+           zone: '{{ firewall_zone2 }}'
+           port: "{{ item }}"
+           permanent: true
+           state: enabled
+   with_items: "{{ ports_zone2 }}"
+ - name: reloading firewall
+   command: firewall-cmd --reload
+
+

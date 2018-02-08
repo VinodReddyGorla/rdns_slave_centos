@@ -1,0 +1,204 @@
+---
+
+###################### HOSTNAME SETUP ##########################
+
+
+  - name: setting hostname for slave1...
+    command: hostnamectl set-hostname "{{ slave1_hostname }}"
+    when: (hostvars[inventory_hostname]['ansible_default_ipv4']['address']) == slave1_ip
+  - name: setting hostname for slave2...
+    command: hostnamectl set-hostname "{{ slave2_hostname }}"
+    when: (hostvars[inventory_hostname]['ansible_default_ipv4']['address']) == slave2_ip
+
+
+
+
+##################### PACKAGE INSTALLATION #####################
+
+
+
+
+  - name: installing required packeges for rDNS...
+    yum:
+      name: "{{ item }}"
+      state: latest
+    with_items:
+         - bind-utils
+         - bind
+         - bind-chroot
+
+
+
+
+####################  STOPPING NAMED SERVICE  ###################
+
+
+
+
+  - name: stoping and disabling named service...
+    service:
+          name: named
+          state: stopped
+          enabled: no
+
+
+
+
+###################  INITIALIZING CHROOT ENVIRONMENT & CREATING SOFT LINK ##################
+
+
+
+
+  - name: Initializing the /var/named/chroot environment...
+    command: /usr/libexec/setup-named-chroot.sh /var/named/chroot on
+  - name: creating  a symbolic link for  named-chroot.service...
+    command: ln -s '/usr/lib/systemd/system/named-chroot.service' '/etc/systemd/system/multi-user.target.wants/named-chroot.service'
+    ignore_errors: yes
+
+
+
+
+#################### NAMED.CONF CONFIGURATION  ############################
+
+
+
+
+  - name: configuring named.conf...
+    template: src=/etc/ansible/roles/rdnsslave/inputs/named.conf.slave1.j2   dest=/etc/named.conf
+  - name : setting listen-on ipaddress for slave1 in named.conf...
+    replace:
+          path: /etc/named.conf
+          regexp: listen-on port 53 { 127.0.0.1;systemIP; };
+          replace: listen-on port 53 { 127.0.0.1;{{ slave1_ip }}; };
+    when: (hostvars[inventory_hostname]['ansible_default_ipv4']['address']) == slave1_ip
+  - name : setting listen-on ipaddress for slave2 in named.conf...
+    replace:
+          path: /etc/named.conf
+          regexp: listen-on port 53 { 127.0.0.1;systemIP; };
+          replace: listen-on port 53 { 127.0.0.1;{{ slave2_ip }}; };
+    when: (hostvars[inventory_hostname]['ansible_default_ipv4']['address']) == slave2_ip
+  - name: creating reverse-zone file...
+    file:
+       path: /etc/named/named.zones
+       state: touch
+  - name: configuring revers-zone file...
+    template: src=/etc/ansible/roles/rdnsslave/inputs/named.zones.slave1.j2   dest=/etc/named/named.zones
+  - name : setting listen-on ipaddress for slave1 in named.conf...
+    replace:
+          path: /etc/named/named.zones
+          regexp:  masters { masterIP; };
+          replace:  masters { {{ master_ip }}; };
+    when: (hostvars[inventory_hostname]['ansible_default_ipv4']['address']) == slave1_ip
+  - name : setting listen-on ipaddress for slave2 in named.conf...
+    replace:
+          path: /etc/named/named.zones
+          regexp: masters { masterIP; };
+          replace: masters { {{ master_ip }}; };
+    when: (hostvars[inventory_hostname]['ansible_default_ipv4']['address']) == slave2_ip
+
+
+
+########################### REVERSE-ZONE FILE CONFIGURATION ###########################
+
+
+
+  - name: crating record file path...
+    file:
+       path: /etc/named/zones/reverse/slave
+       state: directory
+
+
+
+
+############################  CHANGING OWNER & GROUP TO CHROOT #########################
+
+
+
+
+  - name: changing the owner of /var/named/chroot folder...
+    file:
+       path: /var/named
+       owner: named
+       group: named
+       recurse: yes
+  - name: changing the owner of /etc/named folder recrsely...
+    file:
+       path: /etc/named
+       owner: named
+       group: named
+       recurse: yes
+
+
+
+############################### TSIG KEY COPYING TO NAMED.CONF FILE  ######################
+
+
+
+
+  - name: configuring TSIG key... 
+    shell: cat /home/vinod/Krdnskey.*.key | awk '{print $7,$8}'
+    register: key
+  - replace:
+          path: /etc/named.conf
+          regexp: "TSIG key"
+          replace: "{{ key.stdout }}"
+
+
+
+############################# FIREWALLD CONFIGURATION  ####################################
+ 
+
+  - include: /etc/ansible/roles/dns-cachemaster-centos/supported-ymls/firewall1.yml
+    when: (no_zones_interfaces == "1")
+    ignore_errors: yes
+  - include: /etc/ansible/roles/dns-cachemaster-centos/supported-ymls/firewall2.yml
+    when: (no_zones_interfaces == "2")
+    ignore_errors: yes
+  - include: /etc/ansible/roles/dns-cachemaster-centos/supported-ymls/firewall3.yml
+    when: (no_zones_interfaces == "3")
+    ignore_errors: yes
+  - include: /etc/ansible/roles/dns-cachemaster-centos/supported-ymls/firewall4.yml
+    when: (no_zones_interfaces == "4")
+    ignore_errors: yes
+  - include: /etc/ansible/roles/dns-cachemaster-centos/supported-ymls/firewall5.yml
+    when: (no_zones_interfaces == "5")
+    ignore_errors: yes
+
+
+########################### RESTARTING NETWORK SERVICE  ###################################
+
+
+  - name: restarting NetworkManager service...
+    service:
+          name: NetworkManager
+          state: restarted
+
+
+############################  STARTING AND ENABLING,RESTARTING NAMED-CHROOT SERVICE  #####
+
+
+
+  - name: starting and enebling named-chroot service...
+    service:
+          name: named-chroot
+          state: started
+          enabled: yes
+  - name: restarting named-chroot service...
+    service:
+          name: named-chroot
+          state: restarted
+    tags: named-chroot
+
+
+########################### CHANGING THE ZONE FILE PERMISSIONS  ###########################
+
+
+ # - name: changing reverse zone file permissions 
+  #  file:
+   #    path: /etc/named/zones
+    #   mode: 0666
+     #  recurse: yes
+
+
+
+############################ END OF THE FILE #############################################

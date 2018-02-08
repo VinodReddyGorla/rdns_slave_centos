@@ -1,0 +1,13 @@
+---
+ - name: setting allow-transfer permissins for FIPA DNS 1,2,3 in  master in named.conf...
+   replace:
+         path: /etc/named.conf
+         regexp: allow-transfer { slavecache_ip; fipadns_ip1; fipadns_ip2; fipadns_ip3; };
+         replace: allow-transfer { {{ slave_cache_ip }}; {{ fipa_dns_ip1 }}; {{ fipa_dns_ip2 }}; {{ fipa_dns_ip3 }}; };
+   when: (hostvars[inventory_hostname]['ansible_ens33']['ipv4']['address']) == master_cache_ip
+ - name: setting allow-transfer permissins for FIPA DNS 1,2,3 in slave named.conf...
+   replace:
+         path: /etc/named.conf
+         regexp: allow-transfer { slavecache_ip; fipadns_ip1; fipadns_ip2; fipadns_ip3; };
+         replace: allow-transfer { {{ master_cache_ip }}; {{ fipa_dns_ip1 }}; {{ fipa_dns_ip2 }}; {{ fipa_dns_ip3 }}; };
+   when: (hostvars[inventory_hostname]['ansible_ens33']['ipv4']['address']) == slave_cache_ip
